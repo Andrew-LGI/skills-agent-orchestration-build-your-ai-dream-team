@@ -1,0 +1,39 @@
+{
+  "projects": [
+    {
+      "name": "Atlas Client Portal",
+      "owner": "Mona Chen",
+      "status": "On Track",
+      "recentActivity": "Completed authentication review and merged the profile settings update.",
+      "priority": "High"
+    },
+    {
+      "name": "Beacon Analytics Refresh",
+      "owner": "Ravi Patel",
+      "status": "At Risk",
+      "recentActivity": "Data import performance testing found a slowdown in the nightly sync.",
+      "priority": "High"
+    },
+    {
+      "name": "Compass Mobile QA",
+      "owner": "Elena Garcia",
+      "status": "Blocked",
+      "recentActivity": "Waiting on test device access before the release candidate can be verified.",
+      "priority": "Medium"
+    },
+    {
+      "name": "Delta Documentation Hub",
+      "owner": "Sam Taylor",
+      "status": "Completed",
+      "recentActivity": "Published the contributor guide and archived the launch checklist.",
+      "priority": "Low"
+    },
+    {
+      "name": "Evergreen Platform Reliability Improvements",
+      "owner": "Jordan Lee",
+      "status": "On Track",
+      "recentActivity": "Added service health checks and scheduled the incident review follow-up.",
+      "priority": "Medium"
+    }
+  ]
+}

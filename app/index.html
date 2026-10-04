@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="page-header">
+      <p class="eyebrow">Team dashboard</p>
+      <h1>Project Pulse</h1>
+      <p class="page-summary">
+        Track current project status, ownership, recent activity, and priority in one place.
+      </p>
+    </header>
+
+    <main>
+      <section class="dashboard-section" aria-labelledby="dashboard-heading">
+        <div class="section-header">
+          <h2 id="dashboard-heading">Active project cards</h2>
+          <p id="dashboard-status" class="dashboard-message" role="status" aria-live="polite">
+            Loading project data…
+          </p>
+        </div>
+
+        <div id="project-dashboard" class="dashboard" aria-describedby="dashboard-status"></div>
+      </section>
+    </main>
+
+    <script>
+      const dashboard = document.querySelector("#project-dashboard");
+      const dashboardStatus = document.querySelector("#dashboard-status");
+      const dataUrl = "project-data.json";
+
+      function sanitizeText(value, fallback) {
+        if (typeof value !== "string") {
+          return fallback;
+        }
+
+        const trimmedValue = value.trim();
+        return trimmedValue.length > 0 ? trimmedValue : fallback;
+      }
+
+      function normalizeToken(value) {
+        return sanitizeText(value, "unknown")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "") || "unknown";
+      }
+
+      function setMessage(message, type = "info") {
+        dashboardStatus.textContent = message;
+        dashboardStatus.dataset.messageType = type;
+      }
+
+      function renderEmptyState(message) {
+        dashboard.innerHTML = "";
+
+        const emptyState = document.createElement("article");
+        emptyState.className = "empty-state";
+        emptyState.textContent = message;
+        dashboard.appendChild(emptyState);
+      }
+
+      function createProjectCard(project, index) {
+        const name = sanitizeText(project.name, `Untitled project ${index + 1}`);
+        const owner = sanitizeText(project.owner, "Unassigned");
+        const status = sanitizeText(project.status, "Unknown status");
+        const recentActivity = sanitizeText(project.recentActivity, "No recent activity reported.");
+        const priority = sanitizeText(project.priority, "Unknown priority");
+        const statusToken = normalizeToken(status);
+        const priorityToken = normalizeToken(priority);
+
+        const card = document.createElement("article");
+        card.className = "project-card";
+        card.dataset.status = statusToken;
+        card.dataset.priority = priorityToken;
+
+        const cardHeader = document.createElement("header");
+        cardHeader.className = "project-card__header";
+
+        const title = document.createElement("h3");
+        title.className = "project-card__title";
+        title.textContent = name;
+
+        const ownerElement = document.createElement("p");
+        ownerElement.className = "project-card__owner";
+        ownerElement.textContent = `Owner: ${owner}`;
+
+        cardHeader.append(title, ownerElement);
+
+        const metaList = document.createElement("dl");
+        metaList.className = "project-card__details";
+
+        const statusLabel = document.createElement("dt");
+        statusLabel.textContent = "Status";
+        const statusValue = document.createElement("dd");
+        const statusBadge = document.createElement("span");
+        statusBadge.className = `status-badge status-${statusToken}`;
+        statusBadge.textContent = status;
+        statusValue.appendChild(statusBadge);
+
+        const priorityLabel = document.createElement("dt");
+        priorityLabel.textContent = "Priority";
+        const priorityValue = document.createElement("dd");
+        const priorityBadge = document.createElement("span");
+        priorityBadge.className = `priority-badge priority-${priorityToken}`;
+        priorityBadge.dataset.priority = priorityToken;
+        priorityBadge.textContent = priority;
+        priorityValue.appendChild(priorityBadge);
+
+        const activityLabel = document.createElement("dt");
+        activityLabel.textContent = "Recent activity";
+        const activityValue = document.createElement("dd");
+        activityValue.className = "project-card__activity";
+        activityValue.textContent = recentActivity;
+
+        metaList.append(
+          statusLabel,
+          statusValue,
+          priorityLabel,
+          priorityValue,
+          activityLabel,
+          activityValue
+        );
+
+        card.append(cardHeader, metaList);
+        return card;
+      }
+
+      function renderProjects(projects) {
+        dashboard.innerHTML = "";
+
+        if (!Array.isArray(projects)) {
+          setMessage("Project data is unavailable because the projects list is missing.", "error");
+          renderEmptyState("Unable to display projects: expected a projects array in project-data.json.");
+          return;
+        }
+
+        if (projects.length === 0) {
+          setMessage("No projects are available yet.", "empty");
+          renderEmptyState("No projects yet. Add projects to project-data.json to populate the dashboard.");
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        projects.forEach((project, index) => {
+          fragment.appendChild(createProjectCard(project || {}, index));
+        });
+
+        dashboard.appendChild(fragment);
+        setMessage(`${projects.length} projects loaded.`, "success");
+      }
+
+      async function loadProjects() {
+        try {
+          const response = await fetch(dataUrl, { cache: "no-store" });
+
+          if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+          }
+
+          const data = await response.json();
+          renderProjects(data.projects);
+        } catch (error) {
+          console.error("Project Pulse failed to load project-data.json:", error);
+          setMessage("Project data could not be loaded.", "error");
+          renderEmptyState(
+            "Unable to load project-data.json. Start the dashboard through the local server and try again."
+          );
+        }
+      }
+
+      loadProjects();
+    </script>
+  </body>
+</html>
